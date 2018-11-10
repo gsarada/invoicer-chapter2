@@ -109,7 +109,7 @@ func (iv *invoicer) getInvoice(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	log.Println("getting invoice id", vars["id"])
 	var i1 Invoice
-	id, _ := strconv.Atoi(vars["id"])
+	id, _ := strconv.Atoi(html.EscapeString(vars["id"]))
 	iv.db.First(&i1, id)
 	fmt.Printf("%+v\n", i1)
 	if i1.ID == 0 {
@@ -124,7 +124,8 @@ func (iv *invoicer) getInvoice(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Add("Content-Type", "application/json")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
-	w.WriteHeader(http.StatusOK)
+	w.Header().Add("Content-Security-Policy", "default-src 'self';")
+        w.WriteHeader(http.StatusOK)
 	w.Write(jsonInvoice)
 	al := appLog{Message: fmt.Sprintf("retrieved invoice %d", i1.ID), Action: "get-invoice"}
 	al.log(r)
@@ -138,7 +139,7 @@ func (iv *invoicer) postInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var i1 Invoice
-	err = json.Unmarshal(body, &i1)
+	err = json.Unmarshal(html.EscapeString(body), &i1)
 	if err != nil {
 		httpError(w, r, http.StatusBadRequest, "failed to parse request body: %s", err)
 		return
@@ -161,7 +162,7 @@ func (iv *invoicer) putInvoice(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	log.Println("updating invoice", vars["id"])
 	var i1 Invoice
-	iv.db.First(&i1, vars["id"])
+	iv.db.First(&i1, html.EscapeString(vars["id"]))
 	if i1.ID == 0 {
 		httpError(w, r, http.StatusNotFound, "No invoice id %s", vars["id"])
 		return
@@ -171,13 +172,13 @@ func (iv *invoicer) putInvoice(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, http.StatusBadRequest, "failed to read request body: %s", err)
 		return
 	}
-	err = json.Unmarshal(body, &i1)
+	err = json.Unmarshal(html.EscapeString(body), &i1)
 	if err != nil {
 		httpError(w, r, http.StatusBadRequest, "failed to parse request body: %s", err)
 		return
 	}
 	iv.db.Save(&i1)
-	iv.db.First(&i1, vars["id"])
+	iv.db.First(&i1, html.EscapeString(vars["id"]))
 	log.Printf("%+v\n", i1)
 	w.WriteHeader(http.StatusAccepted)
 	w.Write([]byte(fmt.Sprintf("updated invoice %d", i1.ID)))
@@ -189,7 +190,7 @@ func (iv *invoicer) deleteInvoice(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	log.Println("deleting invoice", vars["id"])
 	var i1 Invoice
-	id, _ := strconv.Atoi(vars["id"])
+        id, _ := strconv.Atoi(html.EscapeString(vars["id"]))
 	iv.db.Where("invoice_id = ?", id).Delete(Charge{})
 	i1.ID = uint(id)
 	iv.db.Delete(&i1)
@@ -201,6 +202,7 @@ func (iv *invoicer) deleteInvoice(w http.ResponseWriter, r *http.Request) {
 
 func (iv *invoicer) getIndex(w http.ResponseWriter, r *http.Request) {
 	log.Println("serving index page")
+        w.Header().Add("Content-Security-Policy", "default-src 'self';")
 	w.Write([]byte(`
 <!DOCTYPE html>
 <html>
