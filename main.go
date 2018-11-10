@@ -110,7 +110,7 @@ func (iv *invoicer) getInvoice(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	log.Println("getting invoice id", vars["id"])
 	var i1 Invoice
-	id, _ := strconv.Atoi(html.EscapeString(vars["id"]))
+	id, _ := strconv.Atoi(vars["id"])
 	iv.db.First(&i1, id)
 	fmt.Printf("%+v\n", i1)
 	if i1.ID == 0 {
@@ -125,7 +125,7 @@ func (iv *invoicer) getInvoice(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Add("Content-Type", "application/json")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
-	w.Header().Add("Content-Security-Policy", "default-src 'self';")
+	//w.Header().Add("Content-Security-Policy", "default-src 'self';")
         w.WriteHeader(http.StatusOK)
 	w.Write(jsonInvoice)
 	al := appLog{Message: fmt.Sprintf("retrieved invoice %d", i1.ID), Action: "get-invoice"}
@@ -163,7 +163,7 @@ func (iv *invoicer) putInvoice(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	log.Println("updating invoice", vars["id"])
 	var i1 Invoice
-	iv.db.First(&i1, html.EscapeString(vars["id"]))
+	iv.db.First(&i1, vars["id"])
 	if i1.ID == 0 {
 		httpError(w, r, http.StatusNotFound, "No invoice id %s", vars["id"])
 		return
@@ -179,7 +179,7 @@ func (iv *invoicer) putInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	iv.db.Save(&i1)
-	iv.db.First(&i1, html.EscapeString(vars["id"]))
+	iv.db.First(&i1, vars["id"])
 	log.Printf("%+v\n", i1)
 	w.WriteHeader(http.StatusAccepted)
 	w.Write([]byte(fmt.Sprintf("updated invoice %d", i1.ID)))
@@ -191,7 +191,8 @@ func (iv *invoicer) deleteInvoice(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	log.Println("deleting invoice", vars["id"])
 	var i1 Invoice
-        id, _ := strconv.Atoi(html.EscapeString(vars["id"]))
+        id, _ := strconv.Atoi(vars["id"])
+        //html.EscapeString(vars["id"])
 	iv.db.Where("invoice_id = ?", id).Delete(Charge{})
 	i1.ID = uint(id)
 	iv.db.Delete(&i1)
