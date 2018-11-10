@@ -134,7 +134,7 @@ func (iv *invoicer) getInvoice(w http.ResponseWriter, r *http.Request) {
 
 func (iv *invoicer) postInvoice(w http.ResponseWriter, r *http.Request) {
 	log.Println("posting new invoice")
-	body, err := ioutil.ReadAll(html.EscapeString(r.Body))
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		httpError(w, r, http.StatusBadRequest, "failed to read request body: %s", err)
 		return
@@ -168,7 +168,7 @@ func (iv *invoicer) putInvoice(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, http.StatusNotFound, "No invoice id %s", vars["id"])
 		return
 	}
-	body, err := ioutil.ReadAll(html.EscapeString(r.Body))
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		httpError(w, r, http.StatusBadRequest, "failed to read request body: %s", err)
 		return
