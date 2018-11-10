@@ -42,7 +42,7 @@ jobs:
            mkdir bin;
            cp "$GOPATH_HEAD/bin/${CIRCLE_PROJECT_REPONAME}" bin/invoicer;
            docker build -t ${DOCKER_REPO}/${CIRCLE_PROJECT_REPONAME} .;
-        fi;
+        fi
    - run:
       name: Run application in background
       command: |
