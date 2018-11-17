@@ -66,12 +66,6 @@ func main() {
 
 	iv.db = db
 	iv.db.AutoMigrate(&Invoice{}, &Charge{})
-        
-        CSRFKey = make([]byte, 128)
-        _, err = rand.Read(CSRFKey)
-         if err != nil {
-                log.Fatal("failed to create CSRF key", err)
-        }
 
 	// register routes
 	r := mux.NewRouter()
@@ -135,7 +129,7 @@ func (iv *invoicer) getInvoice(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Add("Content-Type", "application/json")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
-	//w.Header().Add("Content-Security-Policy", "default-src 'self';")
+        w.Header().Add("Content-Security-Policy", "default-src 'self';")
         w.WriteHeader(http.StatusOK)
 	w.Write(jsonInvoice)
 	al := appLog{Message: fmt.Sprintf("retrieved invoice %d", i1.ID), Action: "get-invoice"}
